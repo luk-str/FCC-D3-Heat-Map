@@ -1,5 +1,5 @@
 // Define Chart Sizes
-const w = 900;
+const w = 1200;
 const h = 800;
 const margin = { top: 30, right: 50, bottom: 200, left: 100 };
 
