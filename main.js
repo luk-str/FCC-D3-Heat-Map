@@ -1,5 +1,5 @@
 // Define Chart Sizes
-const w = 950;
+const w = 900;
 const h = 600;
 const margin = { top: 30, right: 50, bottom: 50, left: 100 };
 
@@ -7,6 +7,7 @@ const margin = { top: 30, right: 50, bottom: 50, left: 100 };
 const svg = d3
   .select(".chart")
   .append("svg")
+  .attr("class", "svg")
   .attr("width", w)
   .attr("height", h);
 
@@ -74,14 +75,43 @@ fetch(
       .attr("transform", `translate(${margin.left}, 0)`);
 
     // Define and Append Bars
-    svg
+    const bars = svg
       .selectAll("rect")
       .data(monthlyData)
       .enter()
       .append("rect")
+      .attr("class", "bars")
       .attr("x", (d) => xScale(d.year))
       .attr("y", (d) => yScale(d.month))
       .attr("width", (w - margin.left - margin.right) / yearRange)
       .attr("height", (h - margin.bottom - margin.top) / 12)
       .attr("fill", (d) => getColor(d.variance));
+
+    // Define Tooltip
+    const tooltip = d3
+      .select(".chart")
+      .append("g")
+      .attr("class", "tooltip")
+      .attr("id", "tooltip")
+      .html("hohoho")
+      .style("opacity", 0);
+
+    // Append Tooltip to Bars on Mouseover
+    bars
+      .on("mouseover", function (d) {
+        d3.select(this).raise();
+        tooltip
+          .style("opacity", 1)
+          .style("left", +d3.select(this).attr("x") - 100 + "px")
+          .style("top", +d3.select(this).attr("y") + "px").html(`
+          Land-surface temperature:
+          <b>${(baseTemperature + d.variance).toFixed(3)}℃</b>
+          <br>
+          Variance: <b>${d.variance}℃</b>
+          <br><br>
+          Date: <b>${d3.timeFormat("%B")(
+            d.month
+          )} ${d3.timeFormat("%Y")(d.year)}</b>`);
+      })
+      .on("mouseout", (d) => tooltip.style("opacity", 0));
   });

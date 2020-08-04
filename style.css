@@ -17,19 +17,21 @@ body {
   border: 1px solid #000;
 }
 
+.bars:hover {
+  stroke-width: 1px;
+  stroke: white;
+}
+
 .title {
   font-size: 2em;
   font-weight: 700;
 }
 
 .tooltip {
-  text-align: left;
+  text-align: right;
   position: absolute;
   border: 1px solid black;
   padding: 10px;
-  background-color: rgb(255, 255, 255, 0.8);
-}
-
-.dot:hover {
-  cursor: crosshair;
+  background-color: rgb(255, 255, 255, 0.9);
+  pointer-events: none;
 }
