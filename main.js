@@ -16,20 +16,18 @@ fetch(
 )
   .then((response) => response.json())
   .then(function (data) {
-
     // Separate Data Elements into Separate Variables
     const baseTemperature = data.baseTemperature;
     const monthlyData = data.monthlyVariance;
 
     // Define Range of Years in the Data
     const yearRange =
-      d3.max(monthlyData, (d) => d.year) -
-      d3.min(monthlyData, (d) => d.year);
+      d3.max(monthlyData, (d) => d.year) - d3.min(monthlyData, (d) => d.year);
 
     // Insert Base Temperature From Data into Description
-    document
-      .getElementById("description")
-      .innerText = `Base temperature: ${baseTemperature}℃`;
+    document.getElementById(
+      "description"
+    ).innerText = `Base temperature: ${baseTemperature}℃`;
 
     // Convert Time Data to Usable Date Format
     const parseYear = d3.timeParse("%Y");
@@ -50,6 +48,14 @@ fetch(
       .scaleBand()
       .domain(monthlyData.map((d) => d.month))
       .range([margin.top, h - margin.bottom]);
+
+    const temperatureScale = d3
+      .scaleLinear()
+      .domain(d3.extent(monthlyData, (d) => d.variance))
+      .range([0, 1]);
+
+    // Add Function to Get Color Based on Temperature
+    const getColor = (d) => d3.interpolateInferno(temperatureScale(d));
 
     // Append X Axis
     const xAxis = svg
@@ -77,5 +83,5 @@ fetch(
       .attr("y", (d) => yScale(d.month))
       .attr("width", (w - margin.left - margin.right) / yearRange)
       .attr("height", (h - margin.bottom - margin.top) / 12)
-      .attr("fill", (d) => `hsl(${120 + d.variance * 30}, 70%, 50%, 0.5)`);
+      .attr("fill", (d) => getColor(d.variance));
   });
