@@ -1,7 +1,7 @@
 // Define Chart Sizes
 const w = 900;
-const h = 600;
-const margin = { top: 30, right: 50, bottom: 50, left: 100 };
+const h = 800;
+const margin = { top: 30, right: 50, bottom: 200, left: 100 };
 
 // Add Main Chart svg
 const svg = d3
@@ -80,7 +80,10 @@ fetch(
       .data(monthlyData)
       .enter()
       .append("rect")
-      .attr("class", "bars")
+      .attr("class", "cell")
+      .attr("data-month", (d) => +d3.timeFormat("%m")(d.month)-1)
+      .attr("data-year", (d) => +d3.timeFormat("%Y")(d.year))
+      .attr("data-temp", (d) => d.variance)
       .attr("x", (d) => xScale(d.year))
       .attr("y", (d) => yScale(d.month))
       .attr("width", (w - margin.left - margin.right) / yearRange)
@@ -93,7 +96,6 @@ fetch(
       .append("g")
       .attr("class", "tooltip")
       .attr("id", "tooltip")
-      .html("hohoho")
       .style("opacity", 0);
 
     // Append Tooltip to Bars on Mouseover
@@ -103,7 +105,9 @@ fetch(
         tooltip
           .style("opacity", 1)
           .style("left", +d3.select(this).attr("x") - 100 + "px")
-          .style("top", +d3.select(this).attr("y") + "px").html(`
+          .style("top", +d3.select(this).attr("y") + "px")
+          .attr("data-year", +d3.timeFormat("%Y")(d.year))
+          .html(`
           Land-surface temperature:
           <b>${(baseTemperature + d.variance).toFixed(3)}℃</b>
           <br>
@@ -114,4 +118,33 @@ fetch(
           )} ${d3.timeFormat("%Y")(d.year)}</b>`);
       })
       .on("mouseout", (d) => tooltip.style("opacity", 0));
+
+    // Append Legend Group to svg
+    const legend = svg
+      .append("g")
+      .attr("id", "legend")
+      .attr("transform", `translate(${margin.left}, ${h - 80})`);
+
+    // Define Legend Scale
+    const legendScale = d3
+      .scaleLinear()
+      .domain(d3.extent(monthlyData, (d) => d.variance))
+      .range([0, (w - margin.left - margin.right) / 2]);
+
+    // Add Legend Axis
+    const legendAxis = legend.append("g").call(d3.axisBottom(legendScale));
+
+    // Add Legend Bars
+    const legendBars = legend
+      .selectAll("rect")
+      .data(monthlyData)
+      .enter()
+      .append("rect")
+      .attr("width", 1)
+      .attr("height", 30)
+      .attr("x", (d) => legendScale(d.variance))
+      .attr("y", -30)
+      .attr("fill", (d) => getColor(d.variance));
+
+    console.log(legendScale(5));
   });
