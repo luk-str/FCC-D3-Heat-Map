@@ -3,7 +3,7 @@
 body {
   box-sizing: border-box;
   text-align: center;
-  background-color: #aaa;
+  background-color: #ddd;
   font-family: "Recursive", sans-serif;
 }
 
@@ -14,12 +14,12 @@ body {
   transform: translate(-50%, -50%);
   font-size: 12px;
   background-color: rgb(245, 245, 245);
+  border: 1px solid #000;
 }
 
 .title {
   font-size: 2em;
   font-weight: 700;
-  padding: 1em;
 }
 
 .tooltip {
