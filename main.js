@@ -1,7 +1,7 @@
-// Define Sizes
-const margin = { top: 30, right: 50, bottom: 50, left: 100 };
+// Define Chart Sizes
 const w = 950;
 const h = 600;
+const margin = { top: 30, right: 50, bottom: 50, left: 100 };
 
 // Add Main Chart svg
 const svg = d3
@@ -16,14 +16,20 @@ fetch(
 )
   .then((response) => response.json())
   .then(function (data) {
+
     // Separate Data Elements into Separate Variables
     const baseTemperature = data.baseTemperature;
     const monthlyData = data.monthlyVariance;
 
+    // Define Range of Years in the Data
+    const yearRange =
+      d3.max(monthlyData, (d) => d.year) -
+      d3.min(monthlyData, (d) => d.year);
+
     // Insert Base Temperature From Data into Description
-    document.getElementById(
-      "description"
-    ).innerText = `Base temperature: ${baseTemperature}℃`;
+    document
+      .getElementById("description")
+      .innerText = `Base temperature: ${baseTemperature}℃`;
 
     // Convert Time Data to Usable Date Format
     const parseYear = d3.timeParse("%Y");
@@ -46,7 +52,7 @@ fetch(
       .range([margin.top, h - margin.bottom]);
 
     // Append X Axis
-    svg
+    const xAxis = svg
       .append("g")
       .call(d3.axisBottom(xScale))
       .attr("id", "x-axis")
@@ -54,10 +60,22 @@ fetch(
       .attr("transform", `translate(0, ${h - margin.bottom})`);
 
     // Append Y Axis
-    svg
+    const yAxis = svg
       .append("g")
       .call(d3.axisLeft(yScale).tickFormat(d3.timeFormat("%B")))
       .attr("id", "y-axis")
       .attr("class", "axis-left")
       .attr("transform", `translate(${margin.left}, 0)`);
+
+    // Define and Append Bars
+    svg
+      .selectAll("rect")
+      .data(monthlyData)
+      .enter()
+      .append("rect")
+      .attr("x", (d) => xScale(d.year))
+      .attr("y", (d) => yScale(d.month))
+      .attr("width", (w - margin.left - margin.right) / yearRange)
+      .attr("height", (h - margin.bottom - margin.top) / 12)
+      .attr("fill", (d) => `hsl(${120 + d.variance * 30}, 70%, 50%, 0.5)`);
   });
