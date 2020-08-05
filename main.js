@@ -152,7 +152,7 @@ fetch(
 
     // Generate Color Data
     const colorsArray = [];
-    for (let i = 0; i < 1; i += 0.01) {
+    for (let i = 0; i < 1; i += 0.001) {
       colorsArray.push(getColor(i));
     }
 
@@ -160,7 +160,7 @@ fetch(
     const legend = svg
       .append("g")
       .attr("id", "legend")
-      .attr("transform", `translate(${(w / 2) - (legendWidth / 2)}, ${h - 80})`);
+      .attr("transform", `translate(${w / 2 - legendWidth / 2}, ${h - 80})`);
 
     // Define Legend Scale
     const legendScale = d3
@@ -170,12 +170,12 @@ fetch(
       .nice();
 
     // Add Legend Axis
-    const legendAxis = legend
+    legend
       .append("g")
       .call(d3.axisBottom(legendScale).tickFormat((d) => d + "℃"));
 
     // Add Legend Label
-    const legendLabel = legend
+    legend
       .append("text")
       .text("Temperature variance")
       .attr("text-anchor", "middle")
@@ -183,7 +183,7 @@ fetch(
       .attr("dy", 50);
 
     // Add Legend Bars
-    const legendBars = legend
+    legend
       .selectAll("rect")
       .data(colorsArray)
       .enter()
