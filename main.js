@@ -1,7 +1,7 @@
 // Define Chart Sizes
 const w = 1200;
 const h = 800;
-const margin = { top: 30, right: 50, bottom: 200, left: 100 };
+const margin = { top: 30, right: 50, bottom: 200, left: 120 };
 
 // Add Main Chart svg
 const svg = d3
@@ -17,6 +17,8 @@ fetch(
 )
   .then((response) => response.json())
   .then(function (data) {
+    // BASIC DATA //
+
     // Separate Data Elements into Separate Variables
     const baseTemperature = data.baseTemperature;
     const monthlyData = data.monthlyVariance;
@@ -39,6 +41,11 @@ fetch(
       d.month = parseMonth(d.month);
     });
 
+    // Define Color Scheme
+    const getColor = (d) => d3.interpolateInferno(d);
+
+    // SCALES //
+
     // Define Scales
     const xScale = d3
       .scaleTime()
@@ -55,24 +62,42 @@ fetch(
       .domain(d3.extent(monthlyData, (d) => d.variance))
       .range([0, 1]);
 
-    // Add Function to Get Color Based on Temperature
-    const getColor = (d) => d3.interpolateInferno(temperatureScale(d));
+    // AXIS //
 
-    // Append X Axis
-    const xAxis = svg
+    // Add X Axis
+    svg
       .append("g")
       .call(d3.axisBottom(xScale))
       .attr("id", "x-axis")
       .attr("class", "axis-bottom")
       .attr("transform", `translate(0, ${h - margin.bottom})`);
 
-    // Append Y Axis
-    const yAxis = svg
+    // Add Y Axis
+    svg
       .append("g")
       .call(d3.axisLeft(yScale).tickFormat(d3.timeFormat("%B")))
       .attr("id", "y-axis")
       .attr("class", "axis-left")
       .attr("transform", `translate(${margin.left}, 0)`);
+
+    // Add X Axis Label
+    svg
+      .append("text")
+      .text("Year")
+      .attr("text-anchor", "middle")
+      .attr("dx", w / 2)
+      .attr("dy", h + margin.top - margin.bottom + 15);
+
+    // Add Y Axis Label
+    svg
+      .append("text")
+      .text("Month")
+      .attr("text-anchor", "middle")
+      .attr("dx", (-h + margin.bottom + margin.top) / 2)
+      .attr("dy", margin.left / 3)
+      .attr("transform", "rotate(-90)");
+
+    // BARS //
 
     // Define and Append Bars
     const bars = svg
@@ -81,14 +106,16 @@ fetch(
       .enter()
       .append("rect")
       .attr("class", "cell")
-      .attr("data-month", (d) => +d3.timeFormat("%m")(d.month)-1)
+      .attr("data-month", (d) => +d3.timeFormat("%m")(d.month) - 1)
       .attr("data-year", (d) => +d3.timeFormat("%Y")(d.year))
       .attr("data-temp", (d) => d.variance)
       .attr("x", (d) => xScale(d.year))
       .attr("y", (d) => yScale(d.month))
       .attr("width", (w - margin.left - margin.right) / yearRange)
       .attr("height", (h - margin.bottom - margin.top) / 12)
-      .attr("fill", (d) => getColor(d.variance));
+      .attr("fill", (d) => getColor(temperatureScale(d.variance)));
+
+    // TOOLTIPS //
 
     // Define Tooltip
     const tooltip = d3
@@ -106,8 +133,7 @@ fetch(
           .style("opacity", 1)
           .style("left", +d3.select(this).attr("x") - 100 + "px")
           .style("top", +d3.select(this).attr("y") + "px")
-          .attr("data-year", +d3.timeFormat("%Y")(d.year))
-          .html(`
+          .attr("data-year", +d3.timeFormat("%Y")(d.year)).html(`
           Land-surface temperature:
           <b>${(baseTemperature + d.variance).toFixed(3)}℃</b>
           <br>
@@ -119,32 +145,52 @@ fetch(
       })
       .on("mouseout", (d) => tooltip.style("opacity", 0));
 
+    // LEGEND //
+
+    // Define Legend Width
+    const legendWidth = (w - margin.left - margin.right) / 2;
+
+    // Generate Color Data
+    const colorsArray = [];
+    for (let i = 0; i < 1; i += 0.01) {
+      colorsArray.push(getColor(i));
+    }
+
     // Append Legend Group to svg
     const legend = svg
       .append("g")
       .attr("id", "legend")
-      .attr("transform", `translate(${margin.left}, ${h - 80})`);
+      .attr("transform", `translate(${(w / 2) - (legendWidth / 2)}, ${h - 80})`);
 
     // Define Legend Scale
     const legendScale = d3
       .scaleLinear()
       .domain(d3.extent(monthlyData, (d) => d.variance))
-      .range([0, (w - margin.left - margin.right) / 2]);
+      .range([0, legendWidth])
+      .nice();
 
     // Add Legend Axis
-    const legendAxis = legend.append("g").call(d3.axisBottom(legendScale));
+    const legendAxis = legend
+      .append("g")
+      .call(d3.axisBottom(legendScale).tickFormat((d) => d + "℃"));
+
+    // Add Legend Label
+    const legendLabel = legend
+      .append("text")
+      .text("Temperature variance")
+      .attr("text-anchor", "middle")
+      .attr("dx", legendWidth / 2)
+      .attr("dy", 50);
 
     // Add Legend Bars
     const legendBars = legend
       .selectAll("rect")
-      .data(monthlyData)
+      .data(colorsArray)
       .enter()
       .append("rect")
-      .attr("width", 1)
+      .attr("width", legendWidth / colorsArray.length + 1)
       .attr("height", 30)
-      .attr("x", (d) => legendScale(d.variance))
+      .attr("x", (d, i) => (legendWidth / colorsArray.length) * i)
       .attr("y", -30)
-      .attr("fill", (d) => getColor(d.variance));
-
-    console.log(legendScale(5));
+      .attr("fill", (d) => d);
   });
